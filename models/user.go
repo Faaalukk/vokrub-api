@@ -14,7 +14,7 @@ type User struct {
 
 	Name     string `json:"name"`
 	Email    string `json:"email" gorm:"uniqueIndex"`
-	Password string `json:"-"`
+	Password string `json:"password"`
 	Avatar   string `json:"avatar"`
 	Role     string `json:"role" gorm:"default:admin"`
 }
