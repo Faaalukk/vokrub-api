@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/Faaalukk/vokrub-api.git/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -27,4 +28,8 @@ func Connect() {
 
 	DB = db
 	log.Println("Database connected")
+
+	// Auto migrate
+	DB.AutoMigrate(&models.Customer{})
+	log.Println("Database migrated")
 }

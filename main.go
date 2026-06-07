@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/Faaalukk/vokrub-api.git/database"
+	"github.com/Faaalukk/vokrub-api.git/routes"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -28,6 +29,7 @@ func main() {
 		AllowOrigins: "http://localhost:8080",
 		AllowHeaders: "Origin, Content-Type, Accept",
 	}))
+	routes.Setup(app)
 
 	// Routes
 	app.Get("/health", func(c *fiber.Ctx) error {
