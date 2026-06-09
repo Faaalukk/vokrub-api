@@ -29,7 +29,12 @@ func Connect() {
 	DB = db
 	log.Println("Database connected")
 
-	// Auto migrate
-	DB.AutoMigrate(&models.Customer{}, &models.User{})
+	DB.AutoMigrate(
+		&models.User{},
+		&models.Customer{},
+		&models.Word{},
+		&models.Category{},
+		&models.Sentence{},
+	)
 	log.Println("Database migrated")
 }
