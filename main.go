@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"github.com/Faaalukk/vokrub-api.git/database"
 	"github.com/Faaalukk/vokrub-api.git/routes"
 	"github.com/gofiber/fiber/v2"
@@ -12,9 +10,7 @@ import (
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	godotenv.Load()
 
 	database.Connect()
 
@@ -22,7 +18,7 @@ func main() {
 
 	app.Use(logger.New())
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:8080,http://localhost:8081,https://hgwlkch9-8081.asse.devtunnels.ms",
+		AllowOrigins: "http://localhost:8080,http://localhost:8081",
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
 	}))
