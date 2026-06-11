@@ -2,6 +2,8 @@ services:
   api:
     restart: unless-stopped
     container_name: vokrub-api
+    ports:
+      - "3000:3000"
     build:
       context: .
       args:
