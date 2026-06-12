@@ -10,5 +10,3 @@ services:
         - BUILD_ENV=${BUILD_ENV:-production}
     env_file:
       - ${ENV_FILE}
-    expose:
-      - "3000"
