@@ -24,6 +24,12 @@ type VerifyOTPInput struct {
 	Code  string `json:"code"`
 }
 
+type SMSRequest struct {
+	To      []string `json:"to"`
+	Message string   `json:"message"`
+	From    string   `json:"from"`
+}
+
 // POST /api/customer/auth/otp/send
 func SendOTP(c *fiber.Ctx) error {
 	input := new(SendOTPInput)
@@ -45,6 +51,7 @@ func SendOTP(c *fiber.Ctx) error {
 	})
 
 	if err := sendSMSKub(input.Phone, code); err != nil {
+		fmt.Println(err)
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to send OTP"})
 	}
 
@@ -104,7 +111,7 @@ func generateOTP() string {
 // sendSMSKub sends an OTP via SMS_KUB.
 // If SMSKUB_API_KEY is not set, logs to stdout (dev mode).
 // TODO: verify exact request format at https://www.smskub.com/docs
-func sendSMSKub(phone, code string) error {
+func sendSMSKub(phone string, code string) error {
 	apiKey := os.Getenv("SMSKUB_API_KEY")
 	sender := os.Getenv("SMSKUB_SENDER")
 	if sender == "" {
@@ -116,18 +123,18 @@ func sendSMSKub(phone, code string) error {
 		return nil
 	}
 
-	payload, _ := json.Marshal(map[string]string{
-		"to":      phone,
-		"message": fmt.Sprintf("รหัส OTP Vokrub: %s (ใช้ได้ 5 นาที)", code),
-		"from":    sender,
+	payload, _ := json.Marshal(SMSRequest{
+		To:      []string{phone},
+		Message: fmt.Sprintf("รหัส OTP Vokrub: %s (ใช้ได้ 5 นาที)", code),
+		From:    sender,
 	})
 
-	req, err := http.NewRequest("POST", "https://www.smskub.com/api/sms/send", bytes.NewReader(payload))
+	req, err := http.NewRequest("POST", "https://console.sms-kub.com/api/messages", bytes.NewReader(payload))
 	if err != nil {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Token", apiKey)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
