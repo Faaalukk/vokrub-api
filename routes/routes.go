@@ -21,6 +21,18 @@ func Setup(app *fiber.App) {
 	customerAuth.Post("/register", handlers.CustomerRegister)
 	customerAuth.Get("/me", middleware.CustomerProtected, handlers.CustomerMe)
 
+	// OAuth — Google
+	customerAuth.Get("/oauth/google", handlers.GoogleInit)
+	customerAuth.Get("/oauth/google/callback", handlers.GoogleCallback)
+
+	// OAuth — Facebook
+	customerAuth.Get("/oauth/facebook", handlers.FacebookInit)
+	customerAuth.Get("/oauth/facebook/callback", handlers.FacebookCallback)
+
+	// Phone OTP
+	customerAuth.Post("/otp/send", handlers.SendOTP)
+	customerAuth.Post("/otp/verify", handlers.VerifyOTP)
+
 	// ── Admin: customers ────────────────────────────────────────
 	customer := api.Group("/customer")
 	customer.Get("/", middleware.Protected, handlers.GetCustomers)

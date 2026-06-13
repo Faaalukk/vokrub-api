@@ -40,11 +40,9 @@ func CustomerLogin(c *fiber.Ctx) error {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"customer_id": customer.ID,
-		"email":       customer.Email,
 		"type":        "customer",
 		"exp":         time.Now().Add(7 * 24 * time.Hour).Unix(),
 	})
-
 	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not generate token"})
@@ -68,9 +66,10 @@ func CustomerRegister(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not hash password"})
 	}
 
+	email := input.Email
 	customer := models.Customer{
 		Name:     input.Name,
-		Email:    input.Email,
+		Email:    &email,
 		Password: string(hashed),
 		Plan:     "free",
 		Status:   "active",
@@ -100,10 +99,12 @@ func CustomerMe(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"id":     customer.ID,
 		"name":   customer.Name,
-		"email":  customer.Email,
+		"email":  customer.Email, // *string — null for phone/oauth-only customers
+		"phone":  customer.Phone, // *string — null for email customers
 		"plan":   customer.Plan,
 		"streak": customer.Streak,
 		"words":  wordCount,
 		"status": customer.Status,
+		"image":  customer.Image,
 	})
 }
