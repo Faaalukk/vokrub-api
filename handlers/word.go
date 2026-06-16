@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"strings"
 	"time"
 
 	"github.com/Faaalukk/vokrub-api.git/database"
@@ -43,7 +44,7 @@ func GetWord(c *fiber.Ctx) error {
 // GET /api/word/check?word=xxx
 func CheckWord(c *fiber.Ctx) error {
 	customerID := c.Locals("customer_id")
-	term := c.Query("word")
+	term := strings.ToLower(strings.TrimSpace(c.Query("word")))
 	if term == "" {
 		return c.Status(400).JSON(fiber.Map{"error": "word query param required"})
 	}
@@ -61,6 +62,11 @@ func CreateWord(c *fiber.Ctx) error {
 	input := new(CreateWordInput)
 	if err := c.BodyParser(input); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid body"})
+	}
+
+	input.Word = strings.ToLower(strings.TrimSpace(input.Word))
+	if input.Word == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "word required"})
 	}
 
 	var existing models.Word
@@ -105,6 +111,8 @@ func UpdateWord(c *fiber.Ctx) error {
 	if err := c.BodyParser(input); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid body"})
 	}
+
+	input.Word = strings.ToLower(strings.TrimSpace(input.Word))
 
 	synonyms := input.Synonyms
 	if synonyms == nil {
