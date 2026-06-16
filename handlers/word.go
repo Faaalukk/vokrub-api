@@ -9,10 +9,11 @@ import (
 )
 
 type CreateWordInput struct {
-	Word    string `json:"word"`
-	Pos     string `json:"pos"`
-	Meaning string `json:"meaning"`
-	Note    string `json:"note"`
+	Word       string `json:"word"`
+	Pos        string `json:"pos"`
+	Meaning    string `json:"meaning"`
+	Note       string `json:"note"`
+	CategoryID *uint  `json:"category_id"`
 }
 
 type ReviewWordInput struct {
@@ -72,6 +73,7 @@ func CreateWord(c *fiber.Ctx) error {
 		Pos:        input.Pos,
 		Meaning:    input.Meaning,
 		Note:       input.Note,
+		CategoryID: input.CategoryID,
 		Box:        1,
 		Seen:       0,
 		Due:        true,
@@ -99,10 +101,11 @@ func UpdateWord(c *fiber.Ctx) error {
 	}
 
 	database.DB.Model(&word).Updates(map[string]interface{}{
-		"word":    input.Word,
-		"pos":     input.Pos,
-		"meaning": input.Meaning,
-		"note":    input.Note,
+		"word":        input.Word,
+		"pos":         input.Pos,
+		"meaning":     input.Meaning,
+		"note":        input.Note,
+		"category_id": input.CategoryID,
 	})
 	return c.JSON(word)
 }

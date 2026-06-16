@@ -14,6 +14,7 @@ type Word struct {
 
 	CustomerID uint   `json:"customer_id" gorm:"uniqueIndex:idx_customer_word"`
 	Word       string `json:"word" gorm:"uniqueIndex:idx_customer_word"`
+	CategoryID *uint  `json:"category_id"`
 	Pos        string `json:"pos"`
 	Meaning    string `json:"meaning"`
 	Note       string `json:"note"`
