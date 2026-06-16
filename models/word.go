@@ -12,8 +12,8 @@ type Word struct {
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 
-	CustomerID uint   `json:"customer_id" gorm:"index"`
-	Word       string `json:"word"`
+	CustomerID uint   `json:"customer_id" gorm:"uniqueIndex:idx_customer_word"`
+	Word       string `json:"word" gorm:"uniqueIndex:idx_customer_word"`
 	Pos        string `json:"pos"`
 	Meaning    string `json:"meaning"`
 	Note       string `json:"note"`

@@ -38,12 +38,32 @@ func GetWord(c *fiber.Ctx) error {
 	return c.JSON(word)
 }
 
+// GET /api/word/check?word=xxx
+func CheckWord(c *fiber.Ctx) error {
+	customerID := c.Locals("customer_id")
+	term := c.Query("word")
+	if term == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "word query param required"})
+	}
+	var existing models.Word
+	result := database.DB.Where("customer_id = ? AND word = ?", customerID, term).First(&existing)
+	if result.Error == nil {
+		return c.JSON(fiber.Map{"duplicate": true, "word": existing})
+	}
+	return c.JSON(fiber.Map{"duplicate": false})
+}
+
 // POST /api/word
 func CreateWord(c *fiber.Ctx) error {
 	customerID := c.Locals("customer_id")
 	input := new(CreateWordInput)
 	if err := c.BodyParser(input); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid body"})
+	}
+
+	var existing models.Word
+	if result := database.DB.Where("customer_id = ? AND word = ?", customerID, input.Word).First(&existing); result.Error == nil {
+		return c.Status(409).JSON(fiber.Map{"error": "Word already exists", "word": existing})
 	}
 
 	word := models.Word{

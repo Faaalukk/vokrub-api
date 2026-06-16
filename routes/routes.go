@@ -55,6 +55,7 @@ func Setup(app *fiber.App) {
 	// ── Customer: words (mobile) ────────────────────────────────
 	word := api.Group("/word", middleware.CustomerProtected)
 	word.Get("/", handlers.GetWords)
+	word.Get("/check", handlers.CheckWord)
 	word.Post("/", handlers.CreateWord)
 	word.Get("/:id", handlers.GetWord)
 	word.Put("/:id", handlers.UpdateWord)
