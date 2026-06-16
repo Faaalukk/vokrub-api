@@ -14,10 +14,11 @@ type Word struct {
 
 	CustomerID uint   `json:"customer_id" gorm:"uniqueIndex:idx_customer_word"`
 	Word       string `json:"word" gorm:"uniqueIndex:idx_customer_word"`
-	CategoryID *uint  `json:"category_id"`
-	Pos        string `json:"pos"`
-	Meaning    string `json:"meaning"`
-	Note       string `json:"note"`
+	CategoryID *uint       `json:"category_id"`
+	Pos        string      `json:"pos"`
+	Meaning    string      `json:"meaning"`
+	Note       string      `json:"note"`
+	Synonyms   StringSlice `json:"synonyms" gorm:"type:text;default:'[]'"`
 	Box        int    `json:"box" gorm:"default:1"`
 	Seen       int    `json:"seen" gorm:"default:0"`
 	Due        bool   `json:"due" gorm:"default:true"`

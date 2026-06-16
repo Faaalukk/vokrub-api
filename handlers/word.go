@@ -9,11 +9,12 @@ import (
 )
 
 type CreateWordInput struct {
-	Word       string `json:"word"`
-	Pos        string `json:"pos"`
-	Meaning    string `json:"meaning"`
-	Note       string `json:"note"`
-	CategoryID *uint  `json:"category_id"`
+	Word       string             `json:"word"`
+	Pos        string             `json:"pos"`
+	Meaning    string             `json:"meaning"`
+	Note       string             `json:"note"`
+	CategoryID *uint              `json:"category_id"`
+	Synonyms   models.StringSlice `json:"synonyms"`
 }
 
 type ReviewWordInput struct {
@@ -67,6 +68,10 @@ func CreateWord(c *fiber.Ctx) error {
 		return c.Status(409).JSON(fiber.Map{"error": "Word already exists", "word": existing})
 	}
 
+	synonyms := input.Synonyms
+	if synonyms == nil {
+		synonyms = models.StringSlice{}
+	}
 	word := models.Word{
 		CustomerID: customerID.(uint),
 		Word:       input.Word,
@@ -74,6 +79,7 @@ func CreateWord(c *fiber.Ctx) error {
 		Meaning:    input.Meaning,
 		Note:       input.Note,
 		CategoryID: input.CategoryID,
+		Synonyms:   synonyms,
 		Box:        1,
 		Seen:       0,
 		Due:        true,
@@ -100,12 +106,17 @@ func UpdateWord(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid body"})
 	}
 
+	synonyms := input.Synonyms
+	if synonyms == nil {
+		synonyms = models.StringSlice{}
+	}
 	database.DB.Model(&word).Updates(map[string]interface{}{
 		"word":        input.Word,
 		"pos":         input.Pos,
 		"meaning":     input.Meaning,
 		"note":        input.Note,
 		"category_id": input.CategoryID,
+		"synonyms":    synonyms,
 	})
 	return c.JSON(word)
 }
