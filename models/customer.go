@@ -19,8 +19,9 @@ type Customer struct {
 	Image    string  `json:"image"`
 	Plan     string  `json:"plan"`   // "pro_monthly", "pro_annual", "free"
 	Role     string  `json:"role"`   // "learner", "admin"
-	Streak   int     `json:"streak"`
-	Status   string  `json:"status"` // "active", "inactive"
+	Streak         int    `json:"streak"`
+	LastActiveDate string `json:"last_active_date"` // YYYY-MM-DD
+	Status         string `json:"status"`           // "active", "inactive"
 }
 
 // CustomerIdentity links an OAuth provider or phone to one Customer.

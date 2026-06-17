@@ -7,7 +7,34 @@ import (
 	"github.com/Faaalukk/vokrub-api.git/database"
 	"github.com/Faaalukk/vokrub-api.git/models"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
+
+// updateStreak increments or resets the customer streak based on activity date.
+// Returns the new streak value.
+func updateStreak(db *gorm.DB, customerID uint) int {
+	today := time.Now().Format("2006-01-02")
+	yesterday := time.Now().AddDate(0, 0, -1).Format("2006-01-02")
+
+	var customer models.Customer
+	if err := db.First(&customer, customerID).Error; err != nil {
+		return 0
+	}
+	if customer.LastActiveDate == today {
+		return customer.Streak // already counted today
+	}
+
+	newStreak := 1
+	if customer.LastActiveDate == yesterday {
+		newStreak = customer.Streak + 1
+	}
+
+	db.Model(&customer).Updates(map[string]any{
+		"streak":           newStreak,
+		"last_active_date": today,
+	})
+	return newStreak
+}
 
 type CreateWordInput struct {
 	Word       string             `json:"word"`
@@ -95,7 +122,8 @@ func CreateWord(c *fiber.Ctx) error {
 	if result := database.DB.Create(&word); result.Error != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not create word"})
 	}
-	return c.Status(201).JSON(word)
+	streak := updateStreak(database.DB, customerID.(uint))
+	return c.Status(201).JSON(fiber.Map{"word": word, "streak": streak})
 }
 
 // PUT /api/word/:id
