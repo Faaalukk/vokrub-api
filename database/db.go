@@ -35,6 +35,8 @@ func Connect() {
 		&models.CustomerIdentity{},
 		&models.OTPCode{},
 		&models.WordCategory{},
+		&models.WordFamily{},
+		&models.WordFamilyMember{},
 		&models.Word{},
 		&models.Category{},
 		&models.Sentence{},
