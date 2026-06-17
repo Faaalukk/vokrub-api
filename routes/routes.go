@@ -21,6 +21,18 @@ func Setup(app *fiber.App) {
 	customerAuth.Post("/register", handlers.CustomerRegister)
 	customerAuth.Get("/me", middleware.CustomerProtected, handlers.CustomerMe)
 
+	// OAuth — Google
+	customerAuth.Get("/oauth/google", handlers.GoogleInit)
+	customerAuth.Get("/oauth/google/callback", handlers.GoogleCallback)
+
+	// OAuth — Facebook
+	customerAuth.Get("/oauth/facebook", handlers.FacebookInit)
+	customerAuth.Get("/oauth/facebook/callback", handlers.FacebookCallback)
+
+	// Phone OTP
+	customerAuth.Post("/otp/send", handlers.SendOTP)
+	customerAuth.Post("/otp/verify", handlers.VerifyOTP)
+
 	// ── Admin: customers ────────────────────────────────────────
 	customer := api.Group("/customer")
 	customer.Get("/", middleware.Protected, handlers.GetCustomers)
@@ -43,6 +55,17 @@ func Setup(app *fiber.App) {
 	// ── Customer: words (mobile) ────────────────────────────────
 	word := api.Group("/word", middleware.CustomerProtected)
 	word.Get("/", handlers.GetWords)
+	word.Get("/check", handlers.CheckWord)
+	word.Get("/category", handlers.GetWordCategories)
+	word.Post("/category", handlers.CreateWordCategory)
+	word.Put("/category/:id", handlers.UpdateWordCategory)
+	word.Delete("/category/:id", handlers.DeleteWordCategory)
+	word.Get("/family", handlers.GetWordFamilies)
+	word.Post("/family", handlers.CreateWordFamily)
+	word.Put("/family/:id", handlers.UpdateWordFamily)
+	word.Delete("/family/:id", handlers.DeleteWordFamily)
+	word.Post("/family/:id/member", handlers.AddFamilyMember)
+	word.Delete("/family/:id/member/:wordId", handlers.RemoveFamilyMember)
 	word.Post("/", handlers.CreateWord)
 	word.Get("/:id", handlers.GetWord)
 	word.Put("/:id", handlers.UpdateWord)

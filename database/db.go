@@ -32,6 +32,11 @@ func Connect() {
 	DB.AutoMigrate(
 		&models.User{},
 		&models.Customer{},
+		&models.CustomerIdentity{},
+		&models.OTPCode{},
+		&models.WordCategory{},
+		&models.WordFamily{},
+		&models.WordFamilyMember{},
 		&models.Word{},
 		&models.Category{},
 		&models.Sentence{},

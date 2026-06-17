@@ -2,17 +2,11 @@ services:
   api:
     restart: unless-stopped
     container_name: vokrub-api
+    ports:
+      - "3000:3000"
     build:
       context: .
       args:
         - BUILD_ENV=${BUILD_ENV:-production}
     env_file:
       - ${ENV_FILE}
-    ports:
-      - "${HOST_PORT}:3000"
-    networks:
-      - vokrub
-
-networks:
-  vokrub:
-    driver: bridge

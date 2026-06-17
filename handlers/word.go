@@ -1,18 +1,48 @@
 package handlers
 
 import (
+	"strings"
 	"time"
 
 	"github.com/Faaalukk/vokrub-api.git/database"
 	"github.com/Faaalukk/vokrub-api.git/models"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
+// updateStreak increments or resets the customer streak based on activity date.
+// Returns the new streak value.
+func updateStreak(db *gorm.DB, customerID uint) int {
+	today := time.Now().Format("2006-01-02")
+	yesterday := time.Now().AddDate(0, 0, -1).Format("2006-01-02")
+
+	var customer models.Customer
+	if err := db.First(&customer, customerID).Error; err != nil {
+		return 0
+	}
+	if customer.LastActiveDate == today {
+		return customer.Streak // already counted today
+	}
+
+	newStreak := 1
+	if customer.LastActiveDate == yesterday {
+		newStreak = customer.Streak + 1
+	}
+
+	db.Model(&customer).Updates(map[string]any{
+		"streak":           newStreak,
+		"last_active_date": today,
+	})
+	return newStreak
+}
+
 type CreateWordInput struct {
-	Word    string `json:"word"`
-	Pos     string `json:"pos"`
-	Meaning string `json:"meaning"`
-	Note    string `json:"note"`
+	Word       string             `json:"word"`
+	Pos        string             `json:"pos"`
+	Meaning    string             `json:"meaning"`
+	Note       string             `json:"note"`
+	CategoryID *uint              `json:"category_id"`
+	Synonyms   models.StringSlice `json:"synonyms"`
 }
 
 type ReviewWordInput struct {
@@ -38,6 +68,21 @@ func GetWord(c *fiber.Ctx) error {
 	return c.JSON(word)
 }
 
+// GET /api/word/check?word=xxx
+func CheckWord(c *fiber.Ctx) error {
+	customerID := c.Locals("customer_id")
+	term := strings.ToLower(strings.TrimSpace(c.Query("word")))
+	if term == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "word query param required"})
+	}
+	var existing models.Word
+	result := database.DB.Where("customer_id = ? AND word = ?", customerID, term).First(&existing)
+	if result.Error == nil {
+		return c.JSON(fiber.Map{"duplicate": true, "word": existing})
+	}
+	return c.JSON(fiber.Map{"duplicate": false})
+}
+
 // POST /api/word
 func CreateWord(c *fiber.Ctx) error {
 	customerID := c.Locals("customer_id")
@@ -46,12 +91,28 @@ func CreateWord(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid body"})
 	}
 
+	input.Word = strings.ToLower(strings.TrimSpace(input.Word))
+	if input.Word == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "word required"})
+	}
+
+	var existing models.Word
+	if result := database.DB.Where("customer_id = ? AND word = ?", customerID, input.Word).First(&existing); result.Error == nil {
+		return c.Status(409).JSON(fiber.Map{"error": "Word already exists", "word": existing})
+	}
+
+	synonyms := input.Synonyms
+	if synonyms == nil {
+		synonyms = models.StringSlice{}
+	}
 	word := models.Word{
 		CustomerID: customerID.(uint),
 		Word:       input.Word,
 		Pos:        input.Pos,
 		Meaning:    input.Meaning,
 		Note:       input.Note,
+		CategoryID: input.CategoryID,
+		Synonyms:   synonyms,
 		Box:        1,
 		Seen:       0,
 		Due:        true,
@@ -61,7 +122,8 @@ func CreateWord(c *fiber.Ctx) error {
 	if result := database.DB.Create(&word); result.Error != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not create word"})
 	}
-	return c.Status(201).JSON(word)
+	streak := updateStreak(database.DB, customerID.(uint))
+	return c.Status(201).JSON(fiber.Map{"word": word, "streak": streak})
 }
 
 // PUT /api/word/:id
@@ -78,11 +140,19 @@ func UpdateWord(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid body"})
 	}
 
+	input.Word = strings.ToLower(strings.TrimSpace(input.Word))
+
+	synonyms := input.Synonyms
+	if synonyms == nil {
+		synonyms = models.StringSlice{}
+	}
 	database.DB.Model(&word).Updates(map[string]interface{}{
-		"word":    input.Word,
-		"pos":     input.Pos,
-		"meaning": input.Meaning,
-		"note":    input.Note,
+		"word":        input.Word,
+		"pos":         input.Pos,
+		"meaning":     input.Meaning,
+		"note":        input.Note,
+		"category_id": input.CategoryID,
+		"synonyms":    synonyms,
 	})
 	return c.JSON(word)
 }
