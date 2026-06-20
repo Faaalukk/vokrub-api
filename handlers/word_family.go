@@ -7,12 +7,34 @@ import (
 )
 
 type CreateFamilyInput struct {
-	Name   string `json:"name"`
-	WordID uint   `json:"word_id"` // initial member
+	Name    string           `json:"name"`
+	WordID  uint             `json:"word_id"`  // existing word as initial member (optional)
+	NewWord *CreateWordInput `json:"new_word"` // create-and-add a not-yet-stored word (optional)
 }
 
 type AddFamilyMemberInput struct {
-	WordID uint `json:"word_id"`
+	WordID  uint             `json:"word_id"`  // existing word (optional)
+	NewWord *CreateWordInput `json:"new_word"` // create-and-add a not-yet-stored word (optional)
+}
+
+// resolveMemberWordID picks the word to add: an existing word_id, or an inline
+// new_word that gets created (or matched if already stored). Returns 0 when
+// neither is supplied. wordErr maps to 400 on missing text, 500 otherwise.
+func resolveMemberWordID(customerID uint, wordID uint, newWord *CreateWordInput) (uint, error) {
+	if wordID > 0 {
+		return wordID, nil
+	}
+	if newWord != nil {
+		return findOrCreateWord(customerID, *newWord)
+	}
+	return 0, nil
+}
+
+func mapWordErr(c *fiber.Ctx, err error) error {
+	if err == ErrWordRequired {
+		return c.Status(400).JSON(fiber.Map{"error": "word required"})
+	}
+	return c.Status(500).JSON(fiber.Map{"error": "Could not create word"})
 }
 
 // GET /api/word/family
@@ -39,8 +61,12 @@ func CreateWordFamily(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Could not create family"})
 	}
 
-	if input.WordID > 0 {
-		member := models.WordFamilyMember{FamilyID: family.ID, WordID: input.WordID}
+	wordID, err := resolveMemberWordID(customerID.(uint), input.WordID, input.NewWord)
+	if err != nil {
+		return mapWordErr(c, err)
+	}
+	if wordID > 0 {
+		member := models.WordFamilyMember{FamilyID: family.ID, WordID: wordID}
 		database.DB.Create(&member)
 	}
 
@@ -89,7 +115,14 @@ func AddFamilyMember(c *fiber.Ctx) error {
 	if err := c.BodyParser(input); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid body"})
 	}
-	member := models.WordFamilyMember{FamilyID: family.ID, WordID: input.WordID}
+	wordID, err := resolveMemberWordID(customerID.(uint), input.WordID, input.NewWord)
+	if err != nil {
+		return mapWordErr(c, err)
+	}
+	if wordID == 0 {
+		return c.Status(400).JSON(fiber.Map{"error": "word_id or new_word required"})
+	}
+	member := models.WordFamilyMember{FamilyID: family.ID, WordID: wordID}
 	if result := database.DB.Create(&member); result.Error != nil {
 		return c.Status(409).JSON(fiber.Map{"error": "Already a member"})
 	}

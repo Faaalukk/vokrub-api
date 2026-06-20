@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"strings"
 	"time"
 
@@ -9,6 +10,47 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
+
+// ErrWordRequired is returned when an inline word has no text.
+var ErrWordRequired = errors.New("word required")
+
+// findOrCreateWord resolves a word for the customer: returns the existing word
+// with the same text if present, otherwise creates a new one. Returns the ID.
+// Used when callers (e.g. family creation) want to add a word that may not be
+// stored yet without forcing the user to create it separately first.
+func findOrCreateWord(customerID uint, input CreateWordInput) (uint, error) {
+	term := strings.ToLower(strings.TrimSpace(input.Word))
+	if term == "" {
+		return 0, ErrWordRequired
+	}
+
+	var existing models.Word
+	if result := database.DB.Where("customer_id = ? AND word = ?", customerID, term).First(&existing); result.Error == nil {
+		return existing.ID, nil
+	}
+
+	synonyms := input.Synonyms
+	if synonyms == nil {
+		synonyms = models.StringSlice{}
+	}
+	word := models.Word{
+		CustomerID: customerID,
+		Word:       term,
+		Pos:        input.Pos,
+		Meaning:    input.Meaning,
+		Note:       input.Note,
+		CategoryID: input.CategoryID,
+		Synonyms:   synonyms,
+		Box:        1,
+		Seen:       0,
+		Due:        true,
+		Added:      time.Now().Format("2006-01-02"),
+	}
+	if result := database.DB.Create(&word); result.Error != nil {
+		return 0, result.Error
+	}
+	return word.ID, nil
+}
 
 // updateStreak increments or resets the customer streak based on activity date.
 // Returns the new streak value.
