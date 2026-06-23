@@ -57,5 +57,6 @@ func findOrCreateOAuthCustomer(provider, providerID, name, email, image string) 
 		return nil, err
 	}
 	database.DB.Create(&models.CustomerIdentity{CustomerID: customer.ID, Provider: provider, ProviderID: providerID})
+	notifyDiscordNewCustomer(&customer, provider)
 	return &customer, nil
 }

@@ -79,6 +79,8 @@ func CustomerRegister(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Email already exists"})
 	}
 
+	notifyDiscordNewCustomer(&customer, "email")
+
 	return c.Status(201).JSON(fiber.Map{
 		"id": customer.ID, "name": customer.Name, "email": customer.Email, "plan": customer.Plan,
 	})

@@ -95,6 +95,7 @@ func VerifyOTP(c *fiber.Ctx) error {
 			Provider:   "phone",
 			ProviderID: input.Phone,
 		})
+		notifyDiscordNewCustomer(&customer, "phone")
 	}
 
 	return c.JSON(fiber.Map{
