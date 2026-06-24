@@ -16,7 +16,8 @@ type Word struct {
 	Word       string `json:"word" gorm:"uniqueIndex:idx_customer_word"`
 	CategoryID *uint       `json:"category_id"`
 	Pos        string      `json:"pos"`
-	Meaning    string      `json:"meaning"`
+	Translate  string      `json:"translate"` // native-language translation (e.g. Thai)
+	Meaning    string      `json:"meaning"`   // English definition
 	Note       string      `json:"note"`
 	Synonyms   StringSlice `json:"synonyms" gorm:"type:text;default:'[]'"`
 	Box        int    `json:"box" gorm:"default:1"`

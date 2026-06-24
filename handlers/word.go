@@ -81,6 +81,7 @@ func updateStreak(db *gorm.DB, customerID uint) int {
 type CreateWordInput struct {
 	Word       string             `json:"word"`
 	Pos        string             `json:"pos"`
+	Translate  string             `json:"translate"`
 	Meaning    string             `json:"meaning"`
 	Note       string             `json:"note"`
 	CategoryID *uint              `json:"category_id"`
@@ -151,6 +152,7 @@ func CreateWord(c *fiber.Ctx) error {
 		CustomerID: customerID.(uint),
 		Word:       input.Word,
 		Pos:        input.Pos,
+		Translate:  input.Translate,
 		Meaning:    input.Meaning,
 		Note:       input.Note,
 		CategoryID: input.CategoryID,
@@ -191,6 +193,7 @@ func UpdateWord(c *fiber.Ctx) error {
 	database.DB.Model(&word).Updates(map[string]interface{}{
 		"word":        input.Word,
 		"pos":         input.Pos,
+		"translate":   input.Translate,
 		"meaning":     input.Meaning,
 		"note":        input.Note,
 		"category_id": input.CategoryID,
