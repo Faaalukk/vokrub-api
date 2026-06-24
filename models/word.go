@@ -15,7 +15,7 @@ type Word struct {
 	CustomerID uint   `json:"customer_id" gorm:"uniqueIndex:idx_customer_word"`
 	Word       string `json:"word" gorm:"uniqueIndex:idx_customer_word"`
 	CategoryID *uint       `json:"category_id"`
-	Pos        string      `json:"pos"`
+	Pos        StringSlice `json:"pos" gorm:"type:text;default:'[]'"`
 	Translate  string      `json:"translate"` // native-language translation (e.g. Thai)
 	Meaning    string      `json:"meaning"`   // English definition
 	Note       string      `json:"note"`

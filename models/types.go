@@ -30,5 +30,13 @@ func (s *StringSlice) Scan(value interface{}) error {
 	default:
 		return fmt.Errorf("cannot scan %T into StringSlice", value)
 	}
-	return json.Unmarshal(b, s)
+	if len(b) == 0 {
+		*s = StringSlice{}
+		return nil
+	}
+	if err := json.Unmarshal(b, s); err != nil {
+		// Legacy rows hold a bare scalar (e.g. "noun") rather than a JSON array.
+		*s = StringSlice{string(b)}
+	}
+	return nil
 }

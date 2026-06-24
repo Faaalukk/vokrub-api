@@ -80,7 +80,7 @@ func updateStreak(db *gorm.DB, customerID uint) int {
 
 type CreateWordInput struct {
 	Word       string             `json:"word"`
-	Pos        string             `json:"pos"`
+	Pos        models.StringSlice `json:"pos"`
 	Translate  string             `json:"translate"`
 	Meaning    string             `json:"meaning"`
 	Note       string             `json:"note"`
